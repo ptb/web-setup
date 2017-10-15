@@ -110,6 +110,7 @@ EOF
 ** Options
 
 https://github.com/ai/browserslist#custom-usage-data
+
 sed -Ee "s/(\.[0-9]{5})[0-9]+/\1/"
 
 *** .caniuse.json

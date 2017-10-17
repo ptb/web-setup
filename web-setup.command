@@ -1,317 +1,103 @@
 #!/bin/sh
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+EXT="xhtml"
+GULP="${CWD}/gulp"
+PROJ="$(basename -- "${CWD}")"
+SITE="ptb2.me"
 
-create () {
-  test -d "$(dirname -- "$1")" || \
-    mkdir -p "$(dirname -- "$1")"
-  tee "${CWD}/$1" <<< $2 > /dev/null
-}
+cd "${CWD}"
+mkdir -p "${GULP}"
 
 yarn add --dev \
-  "babel-cli" \
-  "babel-core" \
-  "babel-preset-env" \
-  "frankwallis/gulp-hub#4.1.1" \
-  "gulpjs/gulp#4.0" \
-  "npm-run-all"
+  frankwallis/gulp-hub#4.1.1 \
+  gulpjs/gulp#4.0 \
+  npm-run-all
 
-create ".babelrc" "$(cat << 'EOF'
-{
-  "presets": ["env"]
-}
-EOF
-)"
+yarn add --dev \
+  browserslist
 
-create "gulp/index.js" "$(cat << 'EOF'
-// -- imports ---------------------------------------------------------------
+yarn add --dev \
+  gulp-changed-in-place \
+  gulp-if \
+  gulp-inject-string \
+  gulp-trimlines \
+  kexec \
+  lazypipe
 
-import GulpHub from "gulp-hub"
-import gulp from "gulp"
+yarn add --dev \
+  gulp-if \
+  gulp-htmlmin \
+  gulp-indent \
+  gulp-rename \
+  gulp-htmltidy \
+  gulp-w3cjs \
+  lazypipe
 
-// -- gulp ------------------------------------------------------------------
+yarn add --dev \
+  gulp-flatmap \
+  gulp-slim \
+  lazypipe
 
-gulp.registry(new GulpHub("./*.js"))
+gem install \
+  slim_lint
 
-gulp.task("default", (done) => {
-  done()
-})
-EOF
-)"
+yarn add --dev \
+  gulp-htmltidy \
+  gulp-if \
+  gulp-indent \
+  gulp-svgmin \
+  lazypipe
 
-create ".caniuse.json" "$(cat << 'EOF'
-{
-  "dataByBrowser": {
-    "and_chr": {
-      "61": 1.17531
-    },
-    "and_ff": {
-      "56": 0
-    },
-    "and_qq": {
-      "1.2": 0
-    },
-    "and_uc": {
-      "11.4": 0
-    },
-    "android": {
-      "3": 0,
-      "4": 0,
-      "56": 0,
-      "2.1": 0,
-      "2.2": 0,
-      "2.3": 0,
-      "4.1": 0,
-      "4.2-4.3": 0,
-      "4.4": 0,
-      "4.4.3-4.4.4": 0
-    },
-    "baidu": {
-      "7.12": 0
-    },
-    "bb": {
-      "7": 0,
-      "10": 0
-    },
-    "chrome": {
-      "4": 0,
-      "5": 0,
-      "6": 0,
-      "7": 0,
-      "8": 0,
-      "9": 0,
-      "10": 0,
-      "11": 0,
-      "12": 0,
-      "13": 0,
-      "14": 0,
-      "15": 0,
-      "16": 0,
-      "17": 0,
-      "18": 0,
-      "19": 0,
-      "20": 0,
-      "21": 0,
-      "22": 0,
-      "23": 0,
-      "24": 0,
-      "25": 0,
-      "26": 0,
-      "27": 0,
-      "28": 0,
-      "29": 0,
-      "30": 0,
-      "31": 0,
-      "32": 0.39177,
-      "33": 0,
-      "34": 0,
-      "35": 0,
-      "36": 0,
-      "37": 0,
-      "38": 0,
-      "39": 0,
-      "40": 0,
-      "41": 0,
-      "42": 0,
-      "43": 0,
-      "44": 0,
-      "45": 0,
-      "46": 0,
-      "47": 0,
-      "48": 0,
-      "49": 0.09794,
-      "50": 0.58765,
-      "51": 0,
-      "52": 0.48971,
-      "53": 0.29382,
-      "54": 0.19588,
-      "55": 0.68560,
-      "56": 0.19588,
-      "57": 0.58765,
-      "58": 1.17531,
-      "59": 2.44857,
-      "60": 48.18805,
-      "61": 19.00097,
-      "62": 0.58765,
-      "63": 0.68560,
-      "64": 0
-    },
-    "edge": {
-      "12": 0,
-      "13": 0,
-      "14": 0,
-      "15": 0,
-      "16": 0
-    },
-    "firefox": {
-      "2": 0,
-      "3": 0,
-      "4": 0,
-      "5": 0,
-      "6": 0,
-      "7": 0,
-      "8": 0,
-      "9": 0,
-      "10": 0,
-      "11": 0,
-      "12": 0,
-      "13": 0,
-      "14": 0,
-      "15": 0,
-      "16": 0,
-      "17": 0,
-      "18": 0,
-      "19": 0,
-      "20": 0,
-      "21": 0,
-      "22": 0,
-      "23": 0,
-      "24": 0,
-      "25": 0,
-      "26": 0,
-      "27": 0,
-      "28": 0,
-      "29": 0,
-      "30": 0,
-      "31": 0,
-      "32": 0,
-      "33": 0,
-      "34": 0,
-      "35": 0,
-      "36": 0,
-      "37": 0,
-      "38": 0,
-      "39": 0,
-      "40": 0,
-      "41": 0,
-      "42": 0,
-      "43": 0,
-      "44": 0,
-      "45": 0,
-      "46": 0,
-      "47": 0.39177,
-      "48": 0.29382,
-      "49": 0.09794,
-      "50": 5.87659,
-      "51": 0,
-      "52": 0.48971,
-      "53": 0.68560,
-      "54": 1.37120,
-      "55": 5.38687,
-      "56": 1.17531,
-      "57": 0.09794,
-      "58": 0,
-      "59": 0,
-      "3.5": 0,
-      "3.6": 0
-    },
-    "ie": {
-      "6": 0,
-      "7": 0,
-      "8": 0.19588,
-      "9": 0.19588,
-      "10": 0.09794,
-      "11": 0.48971
-    },
-    "ie_mob": {
-      "10": 0,
-      "11": 0
-    },
-    "ios_saf": {
-      "8": 0,
-      "11": 0,
-      "10.0-10.2": 0,
-      "10.3": 0,
-      "3.2": 0,
-      "4.0-4.1": 0,
-      "4.2-4.3": 0,
-      "5.0-5.1": 0,
-      "6.0-6.1": 0,
-      "7.0-7.1": 0,
-      "8.1-8.4": 0,
-      "9.0-9.2": 0,
-      "9.3": 0
-    },
-    "op_mini": {
-      "all": 0
-    },
-    "op_mob": {
-      "12": 0,
-      "37": 0,
-      "12.1": 0
-    },
-    "opera": {
-      "15": 0,
-      "16": 0,
-      "17": 0,
-      "18": 0,
-      "19": 0,
-      "20": 0,
-      "21": 0,
-      "22": 0,
-      "23": 0,
-      "24": 0,
-      "25": 0,
-      "26": 0,
-      "27": 0,
-      "28": 0,
-      "29": 0,
-      "30": 0,
-      "31": 0,
-      "32": 0,
-      "33": 0,
-      "34": 0,
-      "35": 0,
-      "36": 0,
-      "37": 0,
-      "38": 0,
-      "39": 0,
-      "40": 0,
-      "41": 0,
-      "42": 0,
-      "43": 0,
-      "44": 0,
-      "45": 0,
-      "46": 0,
-      "47": 0,
-      "48": 0,
-      "49": 0,
-      "50": 0,
-      "10.0-10.1": 0,
-      "11.5": 0,
-      "12.1": 0
-    },
-    "safari": {
-      "4": 0,
-      "5": 0,
-      "6": 0,
-      "7": 0,
-      "8": 0,
-      "9": 0.68560,
-      "10": 0.19588,
-      "11": 0.68560,
-      "10.1": 0.78354,
-      "3.1": 0,
-      "3.2": 0,
-      "5.1": 0.09794,
-      "6.1": 0,
-      "7.1": 0,
-      "9.1": 0,
-      "TP": 0
-    },
-    "samsung": {
-      "4": 0,
-      "5": 0
-    }
-  },
-  "id": "71568934|undefined",
-  "meta": {
-    "end_date": "2017-10-15",
-    "start_date": "2017-08-15"
-  },
-  "name": "ptb2.me",
-  "source": "google_analytics",
-  "type": "custom",
-  "uid": "custom.71568934|undefined"
-}
-EOF
-)"
+yarn add --dev \
+  gulp-autoprefixer \
+  gulp-cssbeautify \
+  gulp-csslint \
+  gulp-cssnano \
+  gulp-if \
+  gulp-indent \
+  lazypipe
+
+yarn add --dev \
+  gulp-csscomb \
+  gulp-sass \
+  gulp-sass-lint \
+  lazypipe
+
+yarn add --dev \
+  gulp-if \
+  gulp-indent \
+  lazypipe \
+  webpack-stream \
+  webpack
+
+yarn add --dev \
+  babel-core \
+  eslint
+
+yarn add --dev \
+  babel-preset-env \
+  eslint-plugin-json \
+  eslint-plugin-promise \
+  eslint-plugin-standard \
+  gulp-babel \
+  gulp-eslint \
+  gulp-if \
+  gulp-jsbeautifier \
+  lazypipe
+
+yarn add \
+  riot
+
+yarn add --dev \
+  gulp-concat \
+  gulp-rename \
+  gulp-riot \
+  lazypipe \
+  streamqueue
+
+mkdir -p "${CWD}/code" "${CWD}/code/css" "${CWD}/code/fonts" \
+  "${CWD}/code/img" "${CWD}/code/js" "${CWD}/code/_" "${CWD}/copy" \
+  "${CWD}/data" "${CWD}/docs" "${CWD}/lib" "${CWD}/logs"
+
+printf "%s\n" '*' '!.gitignore' > "${CWD}/copy/.gitignore"
+touch "${CWD}/code/.keep" "${CWD}/docs/.keep"

@@ -8,117 +8,145 @@
 ** Table of Contents                                                   :TOC:
 - [[#web-setup][Web Setup]]
   - [[#setup][Setup]]
+    - [[#set-project-directories][Set Project Directories]]
+    - [[#packagejson][package.json]]
   - [[#gulp][Gulp]]
-    - [[#yarn-add-gulp][yarn add gulp]]
-    - [[#babelrc][.babelrc]]
-    - [[#gulpindexjs][gulp/index.js]]
+    - [[#add-npm-packages][Add NPM Packages]]
+    - [[#gulpgulpjs][gulp/gulp.js]]
   - [[#options][Options]]
+    - [[#add-npm-package][Add NPM Package]]
     - [[#caniusejson][.caniuse.json]]
+    - [[#gulpoptsjs][gulp/opts.js]]
   - [[#utilities][Utilities]]
+    - [[#add-npm-packages-1][Add NPM Packages]]
+    - [[#gulputiljs][gulp/util.js]]
   - [[#html][HTML]]
+    - [[#add-npm-packages-2][Add NPM Packages]]
+    - [[#gulphtmljs][gulp/html.js]]
   - [[#slim][Slim]]
+    - [[#slim-lintyml][.slim-lint.yml]]
+    - [[#add-npm-packages-3][Add NPM Packages]]
+    - [[#add-ruby-gems][Add Ruby Gems]]
+    - [[#gulpslimjs][gulp/slim.js]]
   - [[#svg][SVG]]
+    - [[#add-npm-packages-4][Add NPM Packages]]
+    - [[#gulpsvgjs][gulp/svg.js]]
   - [[#css][CSS]]
+    - [[#add-npm-packages-5][Add NPM Packages]]
+    - [[#gulpcssjs][gulp/css.js]]
   - [[#sass][Sass]]
+    - [[#csscombjson][.csscomb.json]]
+    - [[#sass-lintyml][.sass-lint.yml]]
+    - [[#add-npm-packages-6][Add NPM Packages]]
+    - [[#gulpsassjs][gulp/sass.js]]
   - [[#js][JS]]
+    - [[#add-npm-packages-7][Add NPM Packages]]
+    - [[#gulpjsjs][gulp/js.js]]
   - [[#es6][ES6]]
     - [[#eslintignore][.eslintignore]]
-    - [[#eslintjs][.eslint.js]]
+    - [[#eslintrcjs][.eslintrc.js]]
+    - [[#add-npm-packages-8][Add NPM Packages]]
+    - [[#gulpes6js][gulp/es6.js]]
   - [[#riot][Riot]]
-  - [[#ssl][SSL]]
+    - [[#add-npm-packages-9][Add NPM Packages]]
+    - [[#gulpriotjs][gulp/riot.js]]
   - [[#middleman][Middleman]]
-  - [[#examples][Examples]]
-  - [[#nginx][nginx]]
-  - [[#git][Git]]
-  - [[#license][License]]
+    - [[#create-directories][Create Directories]]
+    - [[#gitignore-and-keep][.gitignore and .keep]]
+    - [[#rubocopyml][.rubocop.yml]]
+    - [[#gemfile][Gemfile]]
+    - [[#configrb][config.rb]]
+    - [[#libcustom_helpersrb][lib/custom_helpers.rb]]
 
 ** Setup
 
+*** Set Project Directories
+
 #+begin_src sh
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+EXT="xhtml"
+GULP="${CWD}/gulp"
+PROJ="$(basename -- "${CWD}")"
+SITE="ptb2.me"
+
+cd "${CWD}"
+mkdir -p "${GULP}"
 #+end_src
 
-#+begin_src sh
-create () {
-  test -d "$(dirname -- "$1")" || \
-    mkdir -p "$(dirname -- "$1")"
-  tee "${CWD}/$1" <<< $2 > /dev/null
-}
-#+end_src
-
-# yarn add --dev \
-  # "json"
-
-# json -I -f package.json -e 'this.foo="bar"'
-# ./node_modules/.bin/babel-node ./node_modules/.bin/gulp
-
-** Gulp
-
-*** yarn add gulp
-
-#+begin_src sh
-yarn add --dev \
-  "babel-cli" \
-  "babel-core" \
-  "babel-preset-env" \
-  "frankwallis/gulp-hub#4.1.1" \
-  "gulpjs/gulp#4.0" \
-  "npm-run-all"
-#+end_src
-
-*** .babelrc
+*** package.json
 
 #+HTML: <details>
-#+begin_src js :noweb-ref ".babelrc" :tangle ".babelrc"
+#+begin_src js :noweb-ref "package.json" :tangle "package.json"
 {
-  "presets": ["env"]
+  "author": "Peter T Bosse II <ptb@ioutime.com> (http://ptb2.me)",
+  "bugs": {
+    "url": "https://github.com/ptb/web-setup/issues"
+  },
+  "dependencies": {},
+  "description": "web-setup",
+  "devDependencies": {},
+  "homepage": "https://github.com/ptb/web-setup#readme",
+  "license": "Apache-2.0",
+  "name": "web-setup",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ptb/web-setup.git"
+  },
+  "scripts": {
+    "build": "gulp --cwd . --gulpfile gulp/gulp.js build",
+    "install:js": "yarn install",
+    "install:rb": "bundle install",
+    "start": "npm-run-all -p install:* -s watch",
+    "watch": "gulp --cwd . --gulpfile gulp/gulp.js"
+  },
+  "version": "2017.10.17"
 }
 #+end_src
 #+HTML: </details>
 
+** Gulp
+
+*** Add NPM Packages
+
 #+begin_src sh
-create ".babelrc" "$(cat << 'EOF'
-<<.babelrc>>
-EOF
-)"
+yarn add --dev \
+  frankwallis/gulp-hub#4.1.1 \
+  gulpjs/gulp#4.0 \
+  npm-run-all
 #+end_src
 
-*** gulp/index.js
+*** gulp/gulp.js
 
 #+HTML: <details>
-#+begin_src js :noweb-ref "gulp/index.js" :tangle "gulp/index.js"
+#+begin_src js :noweb-ref "gulp/gulp.js" :tangle "gulp/gulp.js"
 // -- imports ---------------------------------------------------------------
 
-import GulpHub from "gulp-hub"
-import gulp from "gulp"
+var GulpHub = require("gulp-hub")
+var gulp = require("gulp")
 
 // -- gulp ------------------------------------------------------------------
 
 gulp.registry(new GulpHub("./*.js"))
-
-gulp.task("default", (done) => {
-  done()
-})
+gulp.task("build", gulp.parallel("build:es6", "build:js", "build:riot",
+  "build:sass", "build:svg"))
+gulp.task("default", gulp.parallel("watch:es6", "watch:riot", "watch:sass",
+  "watch:slim", "watch:svg"))
 #+end_src
 #+HTML: </details>
 
-#+begin_src sh
-create "gulp/index.js" "$(cat << 'EOF'
-<<gulp/index.js>>
-EOF
-)"
-#+end_src
-
 ** Options
 
-https://github.com/ai/browserslist#custom-usage-data
+*** Add NPM Package
 
-sed -Ee "s/(\.[0-9]{5})[0-9]+/\1/"
+#+begin_src sh
+yarn add --dev \
+  browserslist
+#+end_src
 
 *** .caniuse.json
 
 #+HTML: <details>
-#+begin_src json :noweb-ref ".caniuse.json" :tangle ".caniuse.json"
+#+begin_src js :noweb-ref ".caniuse.json" :tangle ".caniuse.json"
 {
   "dataByBrowser": {
     "and_chr": {
@@ -396,35 +424,1554 @@ sed -Ee "s/(\.[0-9]{5})[0-9]+/\1/"
 #+end_src
 #+HTML: </details>
 
-#+begin_src sh
-create ".caniuse.json" "$(cat << 'EOF'
-<<.caniuse.json>>
-EOF
-)"
+*** gulp/opts.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/opts.js" :tangle "gulp/opts.js"
+// -- imports ---------------------------------------------------------------
+
+var browserslist = require("browserslist")
+var fs = require("fs")
+var path = require("path")
+var webpack = require("webpack")
+
+// -- functions --------------------------------------------------------------
+
+var opts = {
+  "autoprefixer": function autoprefixer () {
+    return {
+      "browsers": this.browserslist,
+      "cascade": false,
+      "remove": true
+    }
+  },
+  "babel": function babel (min) {
+    return {
+      "compact": min,
+      "minified": min,
+      "plugins": ["check-es2015-constants",
+        "transform-es2015-arrow-functions",
+        "transform-es2015-block-scoped-functions",
+        "transform-es2015-block-scoping", "transform-es2015-classes",
+        "transform-es2015-computed-properties",
+        "transform-es2015-destructuring",
+        "transform-es2015-duplicate-keys", "transform-es2015-for-of",
+        "transform-es2015-function-name", "transform-es2015-literals",
+        "transform-es2015-object-super", "transform-es2015-parameters",
+        "transform-es2015-shorthand-properties",
+        "transform-es2015-spread", "transform-es2015-sticky-regex",
+        "transform-es2015-template-literals",
+        "transform-es2015-typeof-symbol",
+        "transform-es2015-unicode-regex", "transform-regenerator"]
+    }
+  },
+  "browserslist": browserslist([">0.25% in my stats"], {
+    "stats": ".caniuse.json"
+  }),
+  "changedInPlace": {
+    "firstPass": true
+  },
+  "cssbeautify": {
+    "autosemicolon": true,
+    "indent": "  "
+  },
+  "csslint": {
+    "adjoining-classes": false,
+    "box-model": true,
+    "box-sizing": false,
+    "bulletproof-font-face": true,
+    "compatible-vendor-prefixes": false,
+    "display-property-grouping": true,
+    "duplicate-background-images": true,
+    "duplicate-properties": true,
+    "empty-rules": true,
+    "fallback-colors": true,
+    "floats": true,
+    "font-faces": true,
+    "font-sizes": true,
+    "gradients": true,
+    "ids": true,
+    "import": true,
+    "important": true,
+    "known-properties": true,
+    "order-alphabetical": false,
+    "outline-none": true,
+    "overqualified-elements": true,
+    "qualified-headings": true,
+    "regex-selectors": true,
+    "shorthand": true,
+    "star-property-hack": true,
+    "text-indent": true,
+    "underscore-property-hack": true,
+    "unique-headings": true,
+    "universal-selector": true,
+    "unqualified-attributes": true,
+    "vendor-prefix": true,
+    "zero-units": true
+  },
+  "cssnano": function cssnano () {
+    return {
+      "autoprefixer": {
+        "add": true,
+        "browsers": this.browserslist
+      }
+    }
+  },
+  "eslint": {
+    "fix": true
+  },
+  "glob": function glob (base) {
+    return {
+      "css": path.join(base, "**", "*.css"),
+      "es6": path.join(base, "**", "*.es?(6)"),
+      "html": path.join(base, "**", "*.?(x)html"),
+      "js": path.join(base, "**", "*.js"),
+      "riot": path.join(base, "**", "*.riot", "*"),
+      "sass": path.join(base, "**", "*.s@(a|c)ss"),
+      "slim": path.join(base, "**", "*.sl?(i)m"),
+      "svg": path.join(base, "**", "*.svg"),
+      "tag": path.join(base, "**", "*.tag")
+    }
+  },
+  "htmlmin": function htmlmin (min) {
+    return {
+      "collapseWhitespace": min,
+      "keepClosingSlash": true,
+      "minifyURLs": true,
+      "removeComments": true,
+      "removeScriptTypeAttributes": true,
+      "removeStyleLinkTypeAttributes": true,
+      "useShortDoctype": true
+    }
+  },
+  "htmltidy": {
+    "doctype": "html5",
+    "indent": true,
+    "indent-spaces": 2,
+    "input-xml": true,
+    "logical-emphasis": true,
+    "new-blocklevel-tags": "",
+    "output-xhtml": true,
+    "quiet": true,
+    "sort-attributes": "alpha",
+    "tidy-mark": false,
+    "wrap": 78
+  },
+  "jsbeautifier": {
+    "js": {
+      "file_types": [".es6", ".js", ".json"],
+      "break_chained_methods": true,
+      "end_with_newline": true,
+      "indent_size": 2,
+      "jslint_happy": true,
+      "keep_array_indentation": true,
+      "keep_function_indentation": true,
+      "max_preserve_newlines": 2,
+      "space_after_anon_function": true,
+      "wrap_line_length": 78
+    }
+  },
+  "path": {
+    "cwd": process.cwd(),
+    "out": path.join(process.cwd(), "docs"),
+    "src": path.join(process.cwd(), "code"),
+    "tmp": path.join(process.cwd(), "copy")
+  },
+  "rename": {
+    "extname": ".xhtml"
+  },
+  "restart": {
+    "args": ["-e", 'activate app "Terminal"', "-e",
+      'tell app "System Events" to keystroke "k" using command down'],
+    "files": ["config.rb", "gulpfile.js/*", "package.json", "yarn.lock"]
+  },
+  "riot": function riot (min) {
+    return {
+      "compact": min
+    }
+  },
+  "sass": function sass (min) {
+    return {
+      "outputStyle": min ? "compressed" : "expanded"
+    }
+  },
+  "slim": function slim (min) {
+    return {
+      "chdir": true,
+      "options": ["attr_quote='\"'", `format=:${this.ext.html}`,
+        "shortcut={ '.' => { attr: 'class' }, '@' => { attr: 'role' }, " +
+        "'&' => { attr: 'type', tag: 'input' }, '#' => { attr: 'id' }, " +
+        "'%' => { attr: 'itemprop' }, '^' => { attr: 'data-is' } }",
+        "sort_attrs=true"],
+      "pretty": !min,
+      "require": "slim/include"
+    }
+  },
+  "trimlines": {
+    "leading": false
+  },
+  "uglify": function uglify (min) {
+    return {
+      "compress": {
+        "warnings": false
+      },
+      "mangle": min,
+      "output": {
+        "beautify": !min,
+        "comments": false,
+        "indent_level": 2
+      },
+      "sourceMap": true
+    }
+  },
+  "watch": {
+    "ignoreInitial": false
+  },
+  "webpack": function (min) {
+    return {
+      "output": {
+        "filename": "[name].js"
+      },
+      "plugins": [
+        new webpack.SourceMapDevToolPlugin({
+          "filename": "[name].map",
+          "moduleFilenameTemplate": function (info) {
+            if (!min && fs.existsSync(info.absoluteResourcePath)) {
+              return `file://${encodeURI(info.absoluteResourcePath)}`
+            }
+            return `${path.basename(info.resourcePath)}?${info.hash}`
+          }
+        }),
+        new webpack.optimize.AggressiveMergingPlugin(),
+        new webpack.optimize.UglifyJsPlugin(this.uglify(min))
+      ],
+      "resolve": {
+        "extensions": [".js", ".json"]
+      }
+    }
+  }
+}
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = opts
 #+end_src
+#+HTML: </details>
 
 ** Utilities
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-changed-in-place \
+  gulp-if \
+  gulp-inject-string \
+  gulp-trimlines \
+  kexec \
+  lazypipe
+#+end_src
+
+*** gulp/util.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/util.js" :tangle "gulp/util.js"
+// -- imports ---------------------------------------------------------------
+
+var changedInPlace = require("gulp-changed-in-place")
+var gulp = require("gulp")
+var gulpIf = require("gulp-if")
+var injectString = require("gulp-inject-string")
+var kexec = require("kexec")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var spawn = require("child_process")
+  .spawn
+var trimlines = require("gulp-trimlines")
+
+// -- functions -------------------------------------------------------------
+
+var clean = function clean () {
+  // console.log("clean")
+}
+
+var restart = function restart () {
+  if (process.platform === "darwin") {
+    spawn("osascript", opts.restart.args)
+  }
+  kexec(process.argv.shift(), process.argv)
+}
+
+var src = function (glob, ignore, func) {
+  return gulp.src(glob, {
+    "base": opts.path.src,
+    "ignore": ignore ? opts.glob("")
+        .riot : null
+  })
+    .pipe(func())
+}
+
+var trim = function trim () {
+  return lazypipe()
+    .pipe(changedInPlace, opts.changedInPlace)
+    .pipe(trimlines, opts.trimlines)
+}
+
+var wrap = function wrap (el, min) {
+  return lazypipe()
+    .pipe(gulpIf, !min, injectString.prepend("\n"))
+    .pipe(injectString.prepend, `<${el}>`)
+    .pipe(injectString.append, `</${el}>`)
+    .pipe(gulpIf, !min, injectString.append("\n"))
+}
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  clean,
+  restart,
+  src,
+  trim,
+  wrap
+}
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("watch:restart", function (done) {
+  gulp.watch(opts.restart.files)
+    .on("change", function () {
+      restart()
+    })
+  done()
+})
+#+end_src
+#+HTML: </details>
+
 ** HTML
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-if \
+  gulp-htmlmin \
+  gulp-indent \
+  gulp-rename \
+  gulp-htmltidy \
+  gulp-w3cjs \
+  lazypipe
+#+end_src
+
+*** gulp/html.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/html.js" :tangle "gulp/html.js"
+// -- imports ---------------------------------------------------------------
+
+var gulpIf = require("gulp-if")
+var htmlmin = require("gulp-htmlmin")
+var htmltidy = require("gulp-htmltidy")
+var indent = require("gulp-indent")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var rename = require("gulp-rename")
+var w3cjs = require("gulp-w3cjs")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(gulpIf, !wrap, rename(opts.rename))
+    .pipe(gulpIf, !min, htmltidy(opts.htmltidy))
+    .pipe(gulpIf, min, htmlmin(opts.htmlmin(min)))
+    .pipe(gulpIf, wrap, indent())
+}
+
+var inspect = function inspect () {
+  return lazypipe()
+    .pipe(w3cjs)
+}
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** Slim
+
+*** .slim-lint.yml
+
+#+HTML: <details>
+#+begin_src js :noweb-ref ".slim-lint.yml" :tangle ".slim-lint.yml"
+linters:
+  TagCase:
+    enabled: false
+
+skip_frontmatter: true
+#+end_src
+#+HTML: </details>
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-flatmap \
+  gulp-slim \
+  lazypipe
+#+end_src
+
+*** Add Ruby Gems
+
+#+begin_src sh
+gem install \
+  slim_lint
+#+end_src
+
+*** gulp/slim.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/slim.js" :tangle "gulp/slim.js"
+// -- imports ---------------------------------------------------------------
+
+var flatmap = require("gulp-flatmap")
+var gulp = require("gulp")
+var html = require("./html")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var slim = require("gulp-slim")
+var spawn = require("child_process")
+  .spawn
+var util = require("./util")
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .slim
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(slim, opts.slim(min))
+    .pipe(html.build(min, wrap))
+}
+
+var inspect = function inspect () {
+  return lazypipe()
+    .pipe(util.trim())
+    .pipe(function () {
+      flatmap(function (stream, file) {
+        spawn("slim-lint", [file.path], {
+          "stdio": "inherit"
+        })
+        return stream
+      })
+    })
+}
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("watch:slim", function (done) {
+  gulp.watch(glob, opts.watch)
+    .on("all", function (evt, file) {
+      if (["add", "change"].includes(evt)) {
+        util.src(file, false, inspect())
+          .pipe(gulp.dest(opts.path.src))
+      }
+    })
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** SVG
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-htmltidy \
+  gulp-if \
+  gulp-indent \
+  gulp-svgmin \
+  lazypipe
+#+end_src
+
+*** gulp/svg.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/svg.js" :tangle "gulp/svg.js"
+// -- imports ---------------------------------------------------------------
+
+var gulp = require("gulp")
+var gulpIf = require("gulp-if")
+var htmltidy = require("gulp-htmltidy")
+var indent = require("gulp-indent")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var svgmin = require("gulp-svgmin")
+var util = require("./util")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(util.trim())
+    .pipe(gulpIf, min, svgmin())
+    .pipe(gulpIf, wrap, indent())
+}
+
+var inspect = function inspect () {
+  return lazypipe()
+    .pipe(util.trim())
+    .pipe(htmltidy(opts.htmltidy))
+}
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .svg
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("build:svg", function (done) {
+  util.src(glob, true, build(false, false))
+    .pipe(gulp.dest(opts.path.tmp))
+  util.src(glob, true, build(true, false))
+    .pipe(gulp.dest(opts.path.out))
+  done()
+})
+
+gulp.task("watch:svg", function (done) {
+  gulp.watch(glob, opts.watch)
+    .on("all", function (evt, file) {
+      if (["add", "change"].includes(evt)) {
+        util.src(file, false, inspect())
+          .pipe(gulp.dest(opts.path.src))
+      }
+    })
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** CSS
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-autoprefixer \
+  gulp-cssbeautify \
+  gulp-csslint \
+  gulp-cssnano \
+  gulp-if \
+  gulp-indent \
+  lazypipe
+#+end_src
+
+*** gulp/css.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/css.js" :tangle "gulp/css.js"
+// -- imports ---------------------------------------------------------------
+
+var autoprefixer = require("gulp-autoprefixer")
+var cssbeautify = require("gulp-cssbeautify")
+var csslint = require("gulp-csslint")
+var cssnano = require("gulp-cssnano")
+var gulpIf = require("gulp-if")
+var indent = require("gulp-indent")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var util = require("./util")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(autoprefixer, opts.autoprefixer())
+    .pipe(gulpIf, !min, cssbeautify(opts.cssbeautify))
+    .pipe(gulpIf, !min, csslint(opts.csslint))
+    .pipe(gulpIf, !min, csslint.formatter("compact"))
+    .pipe(gulpIf, wrap, indent())
+    .pipe(gulpIf, min, cssnano(opts.cssnano()))
+    .pipe(gulpIf, wrap, util.wrap("style", min)())
+    .pipe(gulpIf, wrap, indent())
+}
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build
+}
+#+end_src
+#+HTML: </details>
+
 ** Sass
+
+*** .csscomb.json
+
+#+HTML: <details>
+#+begin_src js :noweb-ref ".csscomb.json" :tangle ".csscomb.json"
+{
+  "always-semicolon": true,
+  "block-indent": "  ",
+  "color-case": "lower",
+  "color-shorthand": true,
+  "element-case": "lower",
+  "eof-newline": false,
+  "exclude": [
+    ".bundle/**",
+    ".git/**",
+    "node_modules/**"
+  ],
+  "leading-zero": true,
+  "quotes": "double",
+  "remove-empty-rulesets": true,
+  "sort-order": [
+    [
+      "-webkit-rtl-ordering",
+      "direction",
+      "unicode-bidi",
+      "writing-mode",
+      "text-orientation",
+      "glyph-orientation-vertical",
+      "text-combine-upright",
+      "text-transform",
+      "white-space",
+      "tab-size",
+      "line-break",
+      "word-break",
+      "hyphens",
+      "word-wrap",
+      "overflow-wrap",
+      "text-align",
+      "text-align-last",
+      "text-justify",
+      "word-spacing",
+      "letter-spacing",
+      "text-indent",
+      "hanging-punctuation",
+      "-webkit-nbsp-mode",
+      "text-decoration",
+      "text-decoration-line",
+      "text-decoration-style",
+      "text-decoration-color",
+      "text-decoration-skip",
+      "text-underline-position",
+      "text-emphasis",
+      "text-emphasis-style",
+      "text-emphasis-color",
+      "text-emphasis-position",
+      "text-shadow",
+      "-webkit-text-fill-color",
+      "-webkit-text-stroke",
+      "-webkit-text-stroke-width",
+      "-webkit-text-stroke-color",
+      "-webkit-text-security",
+      "font",
+      "font-style",
+      "font-variant",
+      "font-weight",
+      "font-stretch",
+      "font-size",
+      "line-height",
+      "font-family",
+      "src",
+      "unicode-range",
+      "-webkit-text-size-adjust",
+      "font-size-adjust",
+      "font-synthesis",
+      "font-kerning",
+      "font-variant-ligatures",
+      "font-variant-position",
+      "font-variant-caps",
+      "font-variant-numeric",
+      "font-variant-alternates",
+      "font-variant-east-asian",
+      "font-feature-settings",
+      "font-language-override",
+      "list-style",
+      "list-style-type",
+      "list-style-position",
+      "list-style-image",
+      "marker-side",
+      "counter-set",
+      "counter-increment",
+      "caption-side",
+      "table-layout",
+      "border-collapse",
+      "-webkit-border-horizontal-spacing",
+      "-webkit-border-vertical-spacing",
+      "border-spacing",
+      "empty-cells",
+      "move-to",
+      "quotes",
+      "counter-increment",
+      "counter-reset",
+      "page-policy",
+      "content",
+      "crop",
+      "box-sizing",
+      "outline",
+      "outline-color",
+      "outline-style",
+      "outline-width",
+      "outline-offset",
+      "resize",
+      "text-overflow",
+      "cursor",
+      "caret-color",
+      "nav-up",
+      "nav-right",
+      "nav-down",
+      "nav-left",
+      "-webkit-appearance",
+      "-webkit-user-drag",
+      "-webkit-user-modify",
+      "-webkit-user-select",
+      "-moz-user-select",
+      "-ms-user-select",
+      "pointer-events",
+      "-webkit-dashboard-region",
+      "-apple-dashboard-region",
+      "-webkit-touch-callout",
+      "position",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "offset-before",
+      "offset-end",
+      "offset-after",
+      "offset-start",
+      "z-index",
+      "display",
+      "-webkit-margin-collapse",
+      "-webkit-margin-top-collapse",
+      "-webkit-margin-bottom-collapse",
+      "-webkit-margin-start",
+      "margin",
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left",
+      "-webkit-padding-start",
+      "padding",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
+      "width",
+      "min-width",
+      "max-width",
+      "height",
+      "min-height",
+      "max-height",
+      "float",
+      "clear",
+      "overflow",
+      "overflow-x",
+      "overflow-y",
+      "-webkit-overflow-scrolling",
+      "overflow-style",
+      "marquee-style",
+      "marquee-loop",
+      "marquee-direction",
+      "marquee-speed",
+      "visibility",
+      "rotation",
+      "rotation-point",
+      "flex-flow",
+      "flex-direction",
+      "flex-wrap",
+      "order",
+      "flex",
+      "flex-grow",
+      "flex-shrink",
+      "flex-basis",
+      "justify-content",
+      "align-items",
+      "align-self",
+      "align-content",
+      "columns",
+      "column-width",
+      "column-count",
+      "column-gap",
+      "column-rule",
+      "column-rule-width",
+      "column-rule-style",
+      "column-rule-color",
+      "break-before",
+      "break-after",
+      "break-inside",
+      "column-span",
+      "column-fill",
+      "grid",
+      "grid-template",
+      "grid-template-columns",
+      "grid-template-rows",
+      "grid-template-areas",
+      "grid-auto-flow",
+      "grid-auto-columns",
+      "grid-auto-rows",
+      "grid-column",
+      "grid-row",
+      "grid-area",
+      "grid-row-start",
+      "grid-column-start",
+      "grid-row-end",
+      "grid-column-end",
+      "grid-gap",
+      "grid-column-gap",
+      "grid-row-gap",
+      "orphans",
+      "widows",
+      "box-decoration-break",
+      "background",
+      "background-image",
+      "background-position",
+      "background-size",
+      "background-repeat",
+      "background-attachment",
+      "background-origin",
+      "background-clip",
+      "background-color",
+      "border",
+      "border-width",
+      "border-style",
+      "border-color",
+      "border-top",
+      "border-top-width",
+      "border-top-style",
+      "border-top-color",
+      "border-right",
+      "border-right-width",
+      "border-right-style",
+      "border-right-color",
+      "border-bottom",
+      "border-bottom-width",
+      "border-bottom-style",
+      "border-bottom-color",
+      "border-left",
+      "border-left-width",
+      "border-left-style",
+      "border-left-color",
+      "border-radius",
+      "border-top-left-radius",
+      "border-top-right-radius",
+      "border-bottom-right-radius",
+      "border-bottom-left-radius",
+      "border-image",
+      "border-image-source",
+      "border-image-slice",
+      "border-image-width",
+      "border-image-outset",
+      "border-image-repeat",
+      "box-shadow",
+      "color",
+      "opacity",
+      "-webkit-tap-highlight-color",
+      "object-fit",
+      "object-position",
+      "image-resolution",
+      "image-orientation",
+      "clip-path",
+      "mask",
+      "mask-image",
+      "mask-mode",
+      "mask-repeat",
+      "mask-position",
+      "mask-clip",
+      "mask-origin",
+      "mask-size",
+      "mask-composite",
+      "mask-border",
+      "mask-border-source",
+      "mask-border-slice",
+      "mask-border-width",
+      "mask-border-outset",
+      "mask-border-repeat",
+      "mask-border-mode",
+      "mask-type",
+      "clip",
+      "filter",
+      "transition",
+      "transition-property",
+      "transition-duration",
+      "transition-timing-function",
+      "transition-delay",
+      "transform",
+      "transform-origin",
+      "transform-style",
+      "perspective",
+      "perspective-origin",
+      "backface-visibility",
+      "animation",
+      "animation-name",
+      "animation-duration",
+      "animation-timing-function",
+      "animation-delay",
+      "animation-iteration-count",
+      "animation-direction",
+      "animation-fill-mode",
+      "animation-play-state",
+      "voice-volume",
+      "voice-balance",
+      "speak",
+      "speak-as",
+      "pause",
+      "pause-before",
+      "pause-after",
+      "rest",
+      "rest-before",
+      "rest-after",
+      "cue",
+      "cue-before",
+      "cue-after",
+      "voice-family",
+      "voice-rate",
+      "voice-pitch",
+      "voice-range",
+      "voice-stress",
+      "voice-duration",
+      "size",
+      "page",
+      "zoom",
+      "min-zoom",
+      "max-zoom",
+      "user-zoom",
+      "orientation"
+    ]
+  ],
+  "sort-order-fallback": "abc",
+  "space-after-colon": " ",
+  "space-after-combinator": " ",
+  "space-after-opening-brace": "\n",
+  "space-after-selector-delimiter": " ",
+  "space-before-closing-brace": " ",
+  "space-before-colon": "",
+  "space-before-combinator": " ",
+  "space-before-opening-brace": " ",
+  "space-before-selector-delimiter": "",
+  "space-between-declarations": "\n",
+  "strip-spaces": true,
+  "tab-size": true,
+  "unitless-zero": true,
+  "vendor-prefix-align": false
+}
+#+end_src
+#+HTML: </details>
+
+*** .sass-lint.yml
+
+#+HTML: <details>
+#+begin_src js :noweb-ref ".sass-lint.yml" :tangle ".sass-lint.yml"
+rules:
+  bem-depth: 0
+  border-zero:
+    - 1
+    -
+      convention: 0
+  brace-style: 0
+  class-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  clean-import-paths:
+    - 1
+    -
+      leading-underscore: true
+      filename-extension: true
+  empty-args:
+    - 1
+    -
+      include: true
+  empty-line-between-blocks: 0
+  extends-before-declarations: 1
+  extends-before-mixins: 1
+  final-newline: 0
+  force-attribute-nesting: 1
+  force-element-nesting: 1
+  force-pseudo-nesting: 1
+  function-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  hex-length:
+    - 1
+    -
+      style: short
+  hex-notation:
+    - 1
+    -
+      style: lowercase
+  id-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  indentation: 0
+  leading-zero:
+    - 1
+    -
+      include: true
+  mixin-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  mixins-before-declarations: 1
+  nesting-depth:
+    - 1
+    -
+      max-depth: 3
+  no-color-keywords: 1
+  no-color-literals: 1
+  no-css-comments: 1
+  no-debug: 1
+  no-duplicate-properties: 0
+  no-empty-rulesets: 1
+  no-extends: 0
+  no-ids: 1
+  no-important: 1
+  no-invalid-hex: 1
+  no-mergeable-selectors: 1
+  no-misspelled-properties: 1
+  no-qualifying-elements:
+    - 1
+    -
+      allow-element-with-attribute: true
+      allow-element-with-class: false
+      allow-element-with-id: false
+  no-trailing-zero: 1
+  no-transition-all: 1
+  no-url-protocols: 1
+  no-vendor-prefixes: 0
+  no-warn: 1
+  one-declaration-per-line: 1
+  placeholder-in-extend: 0
+  placeholder-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  property-sort-order:
+    - 1
+    -
+      order:
+        - -webkit-rtl-ordering
+        - direction
+        - unicode-bidi
+        - writing-mode
+        - text-orientation
+        - glyph-orientation-vertical
+        - text-combine-upright
+        - text-transform
+        - white-space
+        - tab-size
+        - line-break
+        - word-break
+        - hyphens
+        - word-wrap
+        - overflow-wrap
+        - text-align
+        - text-align-last
+        - text-justify
+        - word-spacing
+        - letter-spacing
+        - text-indent
+        - hanging-punctuation
+        - -webkit-nbsp-mode
+        - text-decoration
+        - text-decoration-line
+        - text-decoration-style
+        - text-decoration-color
+        - text-decoration-skip
+        - text-underline-position
+        - text-emphasis
+        - text-emphasis-style
+        - text-emphasis-color
+        - text-emphasis-position
+        - text-shadow
+        - -webkit-text-fill-color
+        - -webkit-text-stroke
+        - -webkit-text-stroke-width
+        - -webkit-text-stroke-color
+        - -webkit-text-security
+        - font
+        - font-style
+        - font-variant
+        - font-weight
+        - font-stretch
+        - font-size
+        - line-height
+        - font-family
+        - src
+        - unicode-range
+        - -webkit-text-size-adjust
+        - font-size-adjust
+        - font-synthesis
+        - font-kerning
+        - font-variant-ligatures
+        - font-variant-position
+        - font-variant-caps
+        - font-variant-numeric
+        - font-variant-alternates
+        - font-variant-east-asian
+        - font-feature-settings
+        - font-language-override
+        - list-style
+        - list-style-type
+        - list-style-position
+        - list-style-image
+        - marker-side
+        - counter-set
+        - counter-increment
+        - caption-side
+        - table-layout
+        - border-collapse
+        - -webkit-border-horizontal-spacing
+        - -webkit-border-vertical-spacing
+        - border-spacing
+        - empty-cells
+        - move-to
+        - quotes
+        - counter-increment
+        - counter-reset
+        - page-policy
+        - content
+        - crop
+        - box-sizing
+        - outline
+        - outline-color
+        - outline-style
+        - outline-width
+        - outline-offset
+        - resize
+        - text-overflow
+        - cursor
+        - caret-color
+        - nav-up
+        - nav-right
+        - nav-down
+        - nav-left
+        - -webkit-appearance
+        - -webkit-user-drag
+        - -webkit-user-modify
+        - -webkit-user-select
+        - -moz-user-select
+        - -ms-user-select
+        - pointer-events
+        - -webkit-dashboard-region
+        - -apple-dashboard-region
+        - -webkit-touch-callout
+        - position
+        - top
+        - right
+        - bottom
+        - left
+        - offset-before
+        - offset-end
+        - offset-after
+        - offset-start
+        - z-index
+        - display
+        - -webkit-margin-collapse
+        - -webkit-margin-top-collapse
+        - -webkit-margin-bottom-collapse
+        - -webkit-margin-start
+        - margin
+        - margin-top
+        - margin-right
+        - margin-bottom
+        - margin-left
+        - -webkit-padding-start
+        - padding
+        - padding-top
+        - padding-right
+        - padding-bottom
+        - padding-left
+        - width
+        - min-width
+        - max-width
+        - height
+        - min-height
+        - max-height
+        - float
+        - clear
+        - overflow
+        - overflow-x
+        - overflow-y
+        - -webkit-overflow-scrolling
+        - overflow-style
+        - marquee-style
+        - marquee-loop
+        - marquee-direction
+        - marquee-speed
+        - visibility
+        - rotation
+        - rotation-point
+        - flex-flow
+        - flex-direction
+        - flex-wrap
+        - order
+        - flex
+        - flex-grow
+        - flex-shrink
+        - flex-basis
+        - justify-content
+        - align-items
+        - align-self
+        - align-content
+        - columns
+        - column-width
+        - column-count
+        - column-gap
+        - column-rule
+        - column-rule-width
+        - column-rule-style
+        - column-rule-color
+        - break-before
+        - break-after
+        - break-inside
+        - column-span
+        - column-fill
+        - grid
+        - grid-template
+        - grid-template-columns
+        - grid-template-rows
+        - grid-template-areas
+        - grid-auto-flow
+        - grid-auto-columns
+        - grid-auto-rows
+        - grid-column
+        - grid-row
+        - grid-area
+        - grid-row-start
+        - grid-column-start
+        - grid-row-end
+        - grid-column-end
+        - grid-gap
+        - grid-column-gap
+        - grid-row-gap
+        - orphans
+        - widows
+        - box-decoration-break
+        - background
+        - background-image
+        - background-position
+        - background-size
+        - background-repeat
+        - background-attachment
+        - background-origin
+        - background-clip
+        - background-color
+        - border
+        - border-width
+        - border-style
+        - border-color
+        - border-top
+        - border-top-width
+        - border-top-style
+        - border-top-color
+        - border-right
+        - border-right-width
+        - border-right-style
+        - border-right-color
+        - border-bottom
+        - border-bottom-width
+        - border-bottom-style
+        - border-bottom-color
+        - border-left
+        - border-left-width
+        - border-left-style
+        - border-left-color
+        - border-radius
+        - border-top-left-radius
+        - border-top-right-radius
+        - border-bottom-right-radius
+        - border-bottom-left-radius
+        - border-image
+        - border-image-source
+        - border-image-slice
+        - border-image-width
+        - border-image-outset
+        - border-image-repeat
+        - box-shadow
+        - color
+        - opacity
+        - -webkit-tap-highlight-color
+        - object-fit
+        - object-position
+        - image-resolution
+        - image-orientation
+        - clip-path
+        - mask
+        - mask-image
+        - mask-mode
+        - mask-repeat
+        - mask-position
+        - mask-clip
+        - mask-origin
+        - mask-size
+        - mask-composite
+        - mask-border
+        - mask-border-source
+        - mask-border-slice
+        - mask-border-width
+        - mask-border-outset
+        - mask-border-repeat
+        - mask-border-mode
+        - mask-type
+        - clip
+        - filter
+        - transition
+        - transition-property
+        - transition-duration
+        - transition-timing-function
+        - transition-delay
+        - transform
+        - transform-origin
+        - transform-style
+        - perspective
+        - perspective-origin
+        - backface-visibility
+        - animation
+        - animation-name
+        - animation-duration
+        - animation-timing-function
+        - animation-delay
+        - animation-iteration-count
+        - animation-direction
+        - animation-fill-mode
+        - animation-play-state
+        - voice-volume
+        - voice-balance
+        - speak
+        - speak-as
+        - pause
+        - pause-before
+        - pause-after
+        - rest
+        - rest-before
+        - rest-after
+        - cue
+        - cue-before
+        - cue-after
+        - voice-family
+        - voice-rate
+        - voice-pitch
+        - voice-range
+        - voice-stress
+        - voice-duration
+        - size
+        - page
+        - zoom
+        - min-zoom
+        - max-zoom
+        - user-zoom
+        - orientation
+  property-units: 1
+  quotes:
+    - 1
+    -
+      style: double
+  shorthand-values: 1
+  single-line-per-selector: 0
+  space-after-bang: 1
+  space-after-colon: 1
+  space-after-comma: 1
+  space-around-operator: 1
+  space-before-bang: 1
+  space-before-brace: 1
+  space-before-colon: 1
+  space-between-parens: 1
+  trailing-semicolon: 0
+  url-quotes: 1
+  variable-for-property: 0
+  variable-name-format:
+    - 1
+    -
+      allow-leading-underscore: false
+      convention: hyphenatedlowercase
+  zero-unit: 1
+#+end_src
+#+HTML: </details>
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-csscomb \
+  gulp-sass \
+  gulp-sass-lint \
+  lazypipe
+#+end_src
+
+*** gulp/sass.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/sass.js" :tangle "gulp/sass.js"
+// -- imports ---------------------------------------------------------------
+
+var css = require("./css")
+var csscomb = require("gulp-csscomb")
+var gulp = require("gulp")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var sass = require("gulp-sass")
+var sassLint = require("gulp-sass-lint")
+var util = require("./util")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(sass, opts.sass(min))
+    .pipe(css.build(min, wrap))
+}
+
+var inspect = function inspect () {
+  return lazypipe()
+    .pipe(util.trim())
+    .pipe(csscomb)
+    .pipe(sassLint)
+    .pipe(sassLint.format)
+}
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .sass
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("build:sass", function (done) {
+  util.src(glob, true, build(false, false))
+    .pipe(gulp.dest(opts.path.tmp))
+  util.src(glob, true, build(true, false))
+    .pipe(gulp.dest(opts.path.out))
+  done()
+})
+
+gulp.task("watch:sass", function (done) {
+  gulp.watch(glob, opts.watch)
+    .on("all", function (evt, file) {
+      if (["add", "change"].includes(evt)) {
+        util.src(file, false, inspect())
+          .pipe(gulp.dest(opts.path.src))
+      }
+    })
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** JS
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  gulp-if \
+  gulp-indent \
+  lazypipe \
+  webpack-stream \
+  webpack
+#+end_src
+
+*** gulp/js.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/js.js" :tangle "gulp/js.js"
+// -- imports ---------------------------------------------------------------
+
+var gulp = require("gulp")
+var gulpIf = require("gulp-if")
+var indent = require("gulp-indent")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var util = require("./util")
+var webpack = require("webpack")
+var webpackStream = require("webpack-stream")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(gulpIf, wrap, indent())
+    .pipe(webpackStream, opts.webpack(min), webpack)
+    .pipe(gulpIf, wrap, util.wrap("script", min)())
+    .pipe(gulpIf, wrap, indent())
+}
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .js
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("build:js", function (done) {
+  util.src(glob, true, build(false, false))
+    .pipe(gulp.dest(opts.path.tmp))
+  util.src(glob, true, build(true, false))
+    .pipe(gulp.dest(opts.path.out))
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build
+}
+#+end_src
+#+HTML: </details>
+
 ** ES6
 
 *** .eslintignore
 
 #+HTML: <details>
-#+begin_src js :tangle .eslintignore
+#+begin_src js :noweb-ref ".eslintignore" :tangle ".eslintignore"
 !.eslintrc.js
 !*.json
 #+end_src
 #+HTML: </details>
 
-*** .eslint.js
+*** .eslintrc.js
 
 #+HTML: <details>
-#+begin_src js :tangle .eslint.js
+#+begin_src js :noweb-ref ".eslintrc.js" :tangle ".eslintrc.js"
 const INDENT_SIZE = 2
 
 module.exports = {
@@ -1016,26 +2563,414 @@ module.exports = {
 #+end_src
 #+HTML: </details>
 
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add --dev \
+  babel-core \
+  eslint
+
+yarn add --dev \
+  babel-preset-env \
+  eslint-plugin-json \
+  eslint-plugin-promise \
+  eslint-plugin-standard \
+  gulp-babel \
+  gulp-eslint \
+  gulp-if \
+  gulp-jsbeautifier \
+  lazypipe
+#+end_src
+
+*** gulp/es6.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/es6.js" :tangle "gulp/es6.js"
+// -- imports ---------------------------------------------------------------
+
+var babel = require("gulp-babel")
+var eslint = require("gulp-eslint")
+var gulp = require("gulp")
+var gulpIf = require("gulp-if")
+var js = require("./js")
+var jsbeautifier = require("gulp-jsbeautifier")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var util = require("./util")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min, wrap) {
+  return lazypipe()
+    .pipe(babel, opts.babel(min))
+    .pipe(gulpIf, !min, jsbeautifier(opts.jsbeautifier))
+    .pipe(gulpIf, !min, eslint(opts.eslint))
+    .pipe(js.build(min, wrap))
+}
+
+var inspect = function inspect () {
+  return lazypipe()
+    .pipe(util.trim())
+    .pipe(jsbeautifier, opts.jsbeautifier)
+    .pipe(jsbeautifier.reporter)
+    .pipe(eslint, opts.eslint)
+    .pipe(eslint.format)
+}
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .es6
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("build:es6", function (done) {
+  util.src(glob, true, build(false, false))
+    .pipe(gulp.dest(opts.path.tmp))
+  util.src(glob, true, build(true, false))
+    .pipe(gulp.dest(opts.path.out))
+  done()
+})
+
+gulp.task("watch:es6", function (done) {
+  gulp.watch(glob, opts.watch)
+    .on("all", function (evt, file) {
+      if (["add", "change"].includes(evt)) {
+        util.src(file, false, inspect())
+          .pipe(gulp.dest(opts.path.src))
+      }
+    })
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** Riot
-** SSL
+
+*** Add NPM Packages
+
+#+begin_src sh
+yarn add \
+  riot
+
+yarn add --dev \
+  gulp-concat \
+  gulp-rename \
+  gulp-riot \
+  lazypipe \
+  streamqueue
+#+end_src
+
+*** gulp/riot.js
+
+#+HTML: <details>
+#+begin_src js :noweb-ref "gulp/riot.js" :tangle "gulp/riot.js"
+// -- imports ---------------------------------------------------------------
+
+var concat = require("gulp-concat")
+var es6 = require("./es6")
+var gulp = require("gulp")
+var js = require("./js")
+var lazypipe = require("lazypipe")
+var opts = require("./opts")
+var path = require("path")
+var rename = require("gulp-rename")
+var riot = require("gulp-riot")
+var sass = require("./sass")
+var slim = require("./slim")
+var streamqueue = require("streamqueue")
+var svg = require("./svg")
+var util = require("./util")
+
+// -- functions -------------------------------------------------------------
+
+var build = function build (min) {
+  return lazypipe()
+    .pipe(riot, opts.riot(min))
+    .pipe(js.build(min, false))
+}
+
+var inspect = function inspect (base, file, min) {
+  var dir = path.dirname(file)
+  var tag = path.basename(dir)
+    .split(".")[0]
+
+  return streamqueue.obj(
+      util.src(opts.glob(dir)
+        .slim, false, slim.build(min, true)),
+      util.src(opts.glob(dir)
+        .svg, false, svg.build(min, true)),
+      util.src(opts.glob(dir)
+        .sass, false, sass.build(min, true)),
+      util.src(opts.glob(dir)
+        .es6, false, es6.build(min, true))
+    )
+    .pipe(concat(`${tag}${min ? ".min" : null}.tag`))
+    .pipe(util.wrap(tag, min)())
+    .pipe(rename({
+      "dirname": path.relative(base, path.dirname(dir))
+    }))
+}
+
+// -- variables -------------------------------------------------------------
+
+var glob = opts.glob(opts.path.src)
+  .riot
+
+// -- gulp ------------------------------------------------------------------
+
+gulp.task("build:riot", function (done) {
+  util.src(glob, true, build(false))
+    .pipe(gulp.dest(opts.path.tmp))
+  util.src(glob, true, build(true))
+    .pipe(gulp.dest(opts.path.out))
+  done()
+})
+
+gulp.task("watch:riot", function (done) {
+  gulp.watch(glob, opts.watch)
+    .on("all", function (evt, file) {
+      if (["add", "change"].includes(evt)) {
+        inspect(opts.path.src, file, false)
+          .pipe(gulp.dest(opts.path.src))
+        inspect(opts.path.src, file, true)
+          .pipe(gulp.dest(opts.path.src))
+      }
+    })
+  done()
+})
+
+// -- exports ---------------------------------------------------------------
+
+module.exports = {
+  build,
+  inspect
+}
+#+end_src
+#+HTML: </details>
+
 ** Middleman
-** Examples
-** nginx
-** Git
-** License
 
-#+begin_quote
-Copyright 2017 [[https://github.com/ptb][Peter T Bosse II]]
+*** Create Directories
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+#+begin_src sh
+mkdir -p "${CWD}/code" "${CWD}/code/css" "${CWD}/code/fonts" \
+  "${CWD}/code/img" "${CWD}/code/js" "${CWD}/code/_" "${CWD}/copy" \
+  "${CWD}/data" "${CWD}/docs" "${CWD}/lib" "${CWD}/logs"
+#+end_src
 
-    http://www.apache.org/licenses/LICENSE-2.0
+*** .gitignore and .keep
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-#+end_quote
+#+begin_src sh
+printf "%s\n" '*' '!.gitignore' > "${CWD}/copy/.gitignore"
+touch "${CWD}/code/.keep" "${CWD}/docs/.keep"
+#+end_src
+
+*** .rubocop.yml
+
+#+HTML: <details>
+#+begin_src yaml :noweb-ref ".rubocop.yml" :tangle ".rubocop.yml"
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Metrics/LineLength:
+  Max: 80
+#+end_src
+#+HTML: </details>
+
+*** Gemfile
+
+#+HTML: <details>
+#+begin_src ruby :noweb-ref "Gemfile" :tangle "Gemfile"
+ruby '2.4.2', patchlevel: '198'
+
+source 'https://rubygems.org'
+
+gem 'builder', '~> 3.2'
+gem 'bundler', '~> 1.13'
+gem 'middleman', '~> 4.2'
+gem 'middleman-blog', '~> 4.0'
+gem 'middleman-minify-html', '~> 3.4'
+gem 'nokogiri', '~> 1.7'
+gem 'rubocop', '~> 0.46', require: false
+gem 'slim', '~> 3.0'
+gem 'slim_lint', '~> 0.10'
+#+end_src
+#+HTML: </details>
+
+*** config.rb
+
+#+HTML: <details>
+#+begin_src ruby :noweb-ref "config.rb" :tangle "config.rb"
+MIN = config[:environment] == :production
+EXT = '${EXT}'.freeze
+
+activate :blog do |blog|
+  Time.zone = 'America/New_York'
+
+  blog.sources = "blog/{title}/index.#{EXT}"
+  blog.default_extension = '.slim'
+
+  # blog.layout = 'blog'
+  blog.permalink = '{title}'
+
+  # blog.generate_tag_pages = true
+  blog.tag_template = "articles.#{EXT}"
+  blog.taglink = "{tag}/index.#{EXT}"
+
+  blog.calendar_template = "articles.#{EXT}"
+  blog.year_link = "{year}/index.#{EXT}"
+  blog.month_link = "{year}/{month}/index.#{EXT}"
+  blog.day_link = "{year}/{month}/{day}/index.#{EXT}"
+
+  blog.generate_year_pages = false
+  blog.generate_month_pages = false
+  blog.generate_day_pages = false
+
+  blog.paginate = true
+  blog.per_page = 3
+  blog.page_link = 'page/{num}'
+end
+
+activate :directory_indexes
+
+activate :external_pipeline,
+  command: 'gulp build',
+  name: :gulp,
+  source: MIN ? 'docs' : 'copy'
+
+configure :development do
+  if build?
+    # url_for('/blog/file.xhtml') or url_for(sitemap.resources[0])
+    # Example: link(href="#{url_for('/css/style.css')}" rel='stylesheet')
+
+    activate :relative_assets
+    set :relative_links, true
+    set :strip_index_file, false
+  end
+end
+
+configure :production do
+  activate :asset_hash
+  activate :minify_html, remove_quotes: false, simple_boolean_attributes: false
+end
+
+ignore(/.*\.keep/)
+ignore(/\.es6/)
+ignore(/\.sass/)
+ignore(%r{\.riot/.*})
+
+set :build_dir, MIN ? 'docs' : 'copy'
+set :css_dir, 'css' if File.directory? 'code/css/'
+set :fonts_dir, 'fonts' if File.directory? 'code/fonts/'
+set :helpers_dir, 'lib' if File.directory? 'lib/'
+set :images_dir, 'img' if File.directory? 'code/img/'
+set :js_dir, 'js' if File.directory? 'code/js/'
+set :layouts_dir, '_' if File.directory? 'code/_/'
+set :source, 'code' if File.directory? 'code/'
+
+set :index_file, "index.#{EXT}"
+set :layout, 'layout'
+
+set :slim,
+  attr_quote: "'",
+  format: EXT.to_sym,
+  pretty: !MIN,
+  sort_attrs: true,
+  shortcut: {
+    '@' => { attr: 'role' },
+    '#' => { attr: 'id' },
+    '.' => { attr: 'class' },
+    '%' => { attr: 'itemprop' },
+    '^' => { attr: 'data-is' },
+    '&' => { attr: 'type', tag: 'input' }
+  }
+#+end_src
+#+HTML: </details>
+
+*** lib/custom_helpers.rb
+
+#+HTML: <details>
+#+begin_src ruby :noweb-ref "lib/custom_helpers.rb" :tangle "lib/custom_helpers.rb"
+module CustomHelpers
+  def article(article, content)
+    partial '_/article', locals: {
+      article: article,
+      content: content,
+      single: is_blog_article?
+    }
+  end
+
+  def inline_tag(tag, *files)
+    content_tag tag.to_sym do
+      content = '/*<![CDATA[*/ '
+      files.map do |file|
+        content << sitemap.find_resource_by_path(file).render
+      end
+      content << ' /*]]>*/'
+      content
+    end
+  end
+
+  def page_intro
+    if current_page.methods.include? :slug
+      if File.exist?("code/_/_#{current_page.slug}.slim")
+        partial "_/#{current_page.slug}"
+      end
+    elsif !!current_page.locals['tagname']
+      if File.exist?("code/_/_#{current_page.locals['tagname']}.slim")
+        partial "_/#{current_page.locals['tagname']}"
+      end
+    end
+  end
+
+  def page_title
+    site_name = '${SITE}'
+    if is_blog_article?
+      "#{current_page.title} - #{site_name}"
+    else
+      d = Date.new(current_page.locals['year'] || 1, current_page.locals['month'] || 1, current_page.locals['day'] || 1)
+      case current_page.locals['page_type']
+      when 'day'
+        "#{site_name} for #{d.strftime('%B')} #{d.strftime('%e').to_i.ordinalize}, #{d.strftime('%Y')}"
+      when 'month'
+        "#{site_name} for #{d.strftime('%B')} #{d.strftime('%Y')}"
+      when 'year'
+        "#{site_name} for #{d.strftime('%Y')}"
+      when 'tag'
+        "#{current_page.locals['tagname'].titleize} - #{site_name}"
+      else
+        "Welcome to #{site_name}"
+      end
+    end
+  end
+
+  def pagination
+    if is_blog_article?
+      partial '_/pagination', locals: {
+        prev_pg: current_page.next_article,
+        next_pg: current_page.previous_article,
+        page_num: nil,
+        total_pg: nil,
+        single: true
+      }
+    else
+      partial '_/pagination', locals: {
+        prev_pg: current_page.locals['prev_page'],
+        next_pg: current_page.locals['next_page'],
+        page_num: current_page.locals['page_number'],
+        total_pg: current_page.locals['num_pages'],
+        single: false
+      }
+    end
+  end
+end
+#+end_src
+#+HTML: </details>
